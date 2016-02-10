@@ -4,7 +4,7 @@ require 'cloud_controller/buildpack_shifter'
 module VCAP::CloudController
   class Buildpack < Sequel::Model
     export_attributes :name, :position, :enabled, :locked, :filename
-    import_attributes :name, :position, :enabled, :locked, :filename, :key
+    import_attributes :name, :position, :enabled, :locked, :filename, :key, :bits_guid
 
     def self.list_admin_buildpacks
       exclude(key: nil).exclude(key: '').order(:position).all

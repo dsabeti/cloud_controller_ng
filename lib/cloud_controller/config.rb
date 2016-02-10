@@ -243,8 +243,11 @@ module VCAP::CloudController
         },
 
         optional(:route_services_enabled) => bool,
-
         optional(:reserved_private_domains) => String,
+        optional(:bits_service) => {
+          enabled: bool,
+          optional(:endpoint) => String,
+        },
       }
     end
 

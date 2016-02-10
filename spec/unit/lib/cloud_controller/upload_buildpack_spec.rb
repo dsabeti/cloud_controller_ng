@@ -31,9 +31,12 @@ module VCAP::CloudController
 
     let(:expected_sha_valid_zip) { "#{buildpack.guid}_#{sha_valid_zip}" }
 
+    let(:bits_client) { nil }
+
     context 'upload_buildpack' do
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
       end
 
       context 'and the upload to the blobstore succeeds' do
@@ -164,6 +167,28 @@ module VCAP::CloudController
         it 'does nothing' do
           expect(buildpack_blobstore).to_not receive(:cp_to_blobstore)
           expect(upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)).to be false
+        end
+      end
+
+      context 'when using the bits service' do
+        let(:bits_client) { double(:bits_client) }
+
+        it 'also uploads to the bit_service' do
+          expect(bits_client).to receive(:upload_buildpack).
+            with(valid_zip, filename).
+            and_return(double(:response, code: '201', body: '{ "guid": "foo" }'))
+          upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
+        end
+
+        context 'when the bits service return an error' do
+          it 'raises an ApiError' do
+            allow(bits_client).to receive(:upload_buildpack).
+              and_return(double(:response, code: '500'))
+
+            expect {
+              upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
+            }.to raise_error Errors::ApiError
+          end
         end
       end
     end

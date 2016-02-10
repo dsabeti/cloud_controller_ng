@@ -19,7 +19,20 @@ module VCAP::CloudController
           if blob && same_blob(blob)
             logger.info("Deleting '#{key}' from blobstore '#{blobstore_name}'")
             blobstore.delete_blob(blob)
+
+            if buildpack_blobstore? && bits_client
+              buildpack = Buildpack.find(key: key)
+              bits_client.delete_buildpack(buildpack.bits_guid) if buildpack.try(:bits_guid)
+            end
           end
+        end
+
+        def buildpack_blobstore?
+          @blobstore_name == :buildpack_blobstore
+        end
+
+        def bits_client
+          @bits_client ||= CloudController::DependencyLocator.instance.bits_client
         end
 
         def job_name_in_configuration
