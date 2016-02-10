@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :position, :enabled, :locked, :filename }
-      it { is_expected.to import_attributes :name, :position, :enabled, :locked, :filename, :key }
+      it { is_expected.to import_attributes :name, :position, :enabled, :locked, :filename, :key, :bits_guid }
 
       it 'does not string mung(e)?' do
         expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'

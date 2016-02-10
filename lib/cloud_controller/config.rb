@@ -240,7 +240,12 @@ module VCAP::CloudController
           routing_client_secret: String,
         },
 
-        optional(:route_services_enabled) => bool
+        optional(:route_services_enabled) => bool,
+
+        optional(:bits_service) => {
+          enabled: bool,
+          optional(:endpoint) => String,
+        }
       }
     end
 
