@@ -22,6 +22,10 @@ class BitsClient
     delete("/buildpacks/#{guid}")
   end
 
+  def download_url(resource_type, guid)
+    File.join(endpoint.to_s, resource_type.to_s, guid.to_s)
+  end
+
   private
 
   attr_reader :endpoint

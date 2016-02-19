@@ -41,6 +41,13 @@ describe BitsClient do
       end
     end
 
+    describe '#download_url' do
+      it 'returns the bits-service download endpoint for the guid' do
+        url = subject.download_url(:buildpacks, '1234')
+        expect(url).to eq('http://bits-service.com/buildpacks/1234')
+      end
+    end
+
     describe '#download_buildpack' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").

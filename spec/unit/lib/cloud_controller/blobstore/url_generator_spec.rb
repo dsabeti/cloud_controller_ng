@@ -19,13 +19,15 @@ module CloudController
       let(:internal_url_generator) { instance_double(InternalUrlGenerator) }
       let(:local_url_generator) { instance_double(LocalUrlGenerator) }
       let(:upload_url_generator) { instance_double(UploadUrlGenerator) }
+      let(:bits_client) { nil }
 
       subject(:url_generator) do
         described_class.new(blobstore_options,
           package_blobstore,
           buildpack_cache_blobstore,
           admin_buildpack_blobstore,
-          droplet_blobstore)
+          droplet_blobstore,
+          bits_client)
       end
 
       before do
@@ -86,6 +88,25 @@ module CloudController
             allow(internal_url_generator).to receive(:admin_buildpack_download_url)
             url_generator.admin_buildpack_download_url(buildpack)
             expect(internal_url_generator).to have_received(:admin_buildpack_download_url).with(buildpack)
+          end
+
+          context 'when bits-service is being used' do
+            let(:bits_client) { double(:bits_client) }
+
+            it 'calls bits_client for the download url' do
+              expect(bits_client).to receive(:download_url).
+                with(:buildpacks, buildpack.key)
+
+              url_generator.admin_buildpack_download_url(buildpack)
+            end
+
+            it 'returns the download_url from the bits_client' do
+              allow(bits_client).to receive(:download_url).
+                and_return('https://test.com/download-1')
+
+              expect(url_generator.admin_buildpack_download_url(buildpack)).
+                to eq('https://test.com/download-1')
+            end
           end
         end
 

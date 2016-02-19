@@ -9,7 +9,7 @@ module CloudController
       include UrlGeneratorHelpers
       extend Forwardable
 
-      def initialize(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
+      def initialize(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore, bits_client=nil)
         @blobstore_options         = blobstore_options
         @package_blobstore         = package_blobstore
         @buildpack_cache_blobstore = buildpack_cache_blobstore
@@ -18,6 +18,7 @@ module CloudController
         @internal_url_generator    = InternalUrlGenerator.new(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
         @local_url_generator       = LocalUrlGenerator.new(blobstore_options, package_blobstore, buildpack_cache_blobstore, admin_buildpack_blobstore, droplet_blobstore)
         @upload_url_generator      = UploadUrlGenerator.new(blobstore_options)
+        @bits_client               = bits_client
       end
 
       def app_package_download_url(app)
@@ -53,6 +54,8 @@ module CloudController
       end
 
       def admin_buildpack_download_url(buildpack)
+        return @bits_client.download_url(:buildpacks, buildpack.key) if use_bits_service?
+
         if @admin_buildpack_blobstore.local?
           @local_url_generator.admin_buildpack_download_url(buildpack)
         else
@@ -87,6 +90,12 @@ module CloudController
         :package_droplet_upload_url,
         :v3_app_buildpack_cache_upload_url,
         :buildpack_cache_upload_url
+
+      private
+
+      def use_bits_service?
+        !!@bits_client
+      end
     end
   end
 end
