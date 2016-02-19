@@ -42,13 +42,10 @@ module VCAP::CloudController
     def download(guid)
       obj = Buildpack.find(guid: guid)
 
-      blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
-      raise Errors::ApiError.new_from_details('NotFound', guid) unless blob
-
       if use_bits_service
-        bits_response = bits_client.download_buildpack(obj.bits_guid)
-        raise Errors::ApiError.new_from_details('NotFound', "BitsSerice: #{obj.bits_guid}") if bits_response.code.to_i == 404
-        raise Errors::ApiError.new_from_details('BitsServiceInvalidResponse', 'failed to download buildpack') if bits_response.code.to_i != 200
+        raise Errors::ApiError.new_from_details('NotFound', guid) unless obj && obj.key
+        url = bits_client.download_url(:buildpacks, obj.key)
+        return [HTTP::FOUND, { 'Location' => url }, nil]
       end
 
       blob_dispatcher.send_or_redirect(local: @buildpack_blobstore.local?, blob: blob)

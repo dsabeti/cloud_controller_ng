@@ -46,7 +46,7 @@ module VCAP::CloudController
     after { FileUtils.rm_rf(tmpdir) }
 
     context 'Buildpack binaries' do
-      let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ bits_guid: 'abcd', name: 'upload_binary_buildpack', position: 0 }) }
+      let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ key: '54321', name: 'upload_binary_buildpack', position: 0 }) }
 
       before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config)) }
 
@@ -295,41 +295,31 @@ module VCAP::CloudController
             authorize(staging_user, staging_password)
 
             allow_any_instance_of(BitsClient).to receive(:upload_buildpack).
-              and_return(double(:response, code: '201', body: { guid: test_buildpack.bits_guid }.to_json))
+              and_return(double(:response, code: '201', body: { guid: test_buildpack.key }.to_json))
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }, admin_headers
           end
 
           it 'still returns 302 on success' do
-            allow_any_instance_of(BitsClient).to receive(:download_buildpack).
-              and_return(double(:response, code: '200'))
+            redirect_url = 'http://bits-service.example.com/buildpacks/1234'
+            allow_any_instance_of(BitsClient).to receive(:download_url).
+              and_return(redirect_url)
 
             get "/v2/buildpacks/#{test_buildpack.guid}/download"
             expect(last_response.status).to eq(302)
+            expect(last_response.header['Location']).to eq(redirect_url)
           end
 
-          it 'does an additional request to the bits service' do
+          it 'gets the redirect url from the bits client' do
             expect_any_instance_of(BitsClient).
-              to receive(:download_buildpack).with(test_buildpack.bits_guid)
+              to receive(:download_url).with(:buildpacks, test_buildpack.key)
+
             get "/v2/buildpacks/#{test_buildpack.guid}/download"
           end
 
           context 'when the bits service return 404' do
             it 'returns an error' do
-              allow_any_instance_of(BitsClient).to receive(:download_buildpack).
-                and_return(double(:response, code: '404'))
-              get "/v2/buildpacks/#{test_buildpack.guid}/download"
-
+              get "/v2/buildpacks/#{test_buildpack.guid}-1-1-1-1/download"
               expect(last_response.status).to eq(404)
-            end
-          end
-
-          context 'when the bits service return an error' do
-            it 'returns an error' do
-              allow_any_instance_of(BitsClient).to receive(:download_buildpack).
-                and_return(double(:response, code: '500'))
-              get "/v2/buildpacks/#{test_buildpack.guid}/download"
-
-              expect(last_response.status).to eq(500)
             end
           end
         end

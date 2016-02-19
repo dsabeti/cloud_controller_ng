@@ -81,25 +81,15 @@ module VCAP::CloudController
 
         let(:blobstore_type) { :buildpack_blobstore }
 
-        let(:bits_guid) { 'guid' }
-
-        let(:buildpack) { double(Buildpack, key: key, bits_guid: bits_guid) }
+        let(:buildpack) { double(Buildpack, key: key) }
 
         before(:each) do
           allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
           allow(Buildpack).to receive(:find).with(key: key).and_return(buildpack)
         end
 
-        it 'deletes the blob from the regular blobstore' do
-          expect {
-            job.perform
-          }.to change {
-            blobstore.exists?(key)
-          }.from(true).to(false)
-        end
-
         it 'deletes the blob from the bits service' do
-          expect(bits_client).to receive(:delete_buildpack).with(bits_guid)
+          expect(bits_client).to receive(:delete_buildpack).with(key)
           job.perform
         end
 
