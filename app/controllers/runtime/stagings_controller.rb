@@ -6,7 +6,8 @@ module VCAP::CloudController
   class StagingsController < RestController::BaseController
     def self.dependencies
       [:droplet_blobstore, :buildpack_cache_blobstore, :package_blobstore,
-       :blobstore_url_generator, :missing_blob_handler, :blob_sender, :config]
+       :blobstore_url_generator, :missing_blob_handler, :blob_sender, :config,
+       :use_bits_service, :bits_client]
     end
 
     include VCAP::Errors
@@ -27,7 +28,7 @@ module VCAP::CloudController
        VCAP::CloudController::Config.config[:staging][:auth][:password]]
     end
 
-    attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore
+    attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore, :use_bits_service, :bits_client
 
     get '/staging/apps/:guid', :download_app
     def download_app(guid)
@@ -75,6 +76,14 @@ module VCAP::CloudController
       app = App.find(guid: guid)
       check_app_exists(app, guid)
       blob_name = 'droplet'
+
+      if @use_bits_service
+        droplet = app.current_droplet
+        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && droplet.droplet_hash
+        url = @bits_client.download_url(:droplets, droplet.droplet_hash)
+        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
+        redirect url
+      end
 
       if @blobstore.local?
         droplet = app.current_droplet
@@ -199,6 +208,8 @@ module VCAP::CloudController
       @config = dependencies.fetch(:config)
       @missing_blob_handler = dependencies.fetch(:missing_blob_handler)
       @blob_sender = dependencies.fetch(:blob_sender)
+      @use_bits_service = dependencies.fetch(:use_bits_service)
+      @bits_client = dependencies.fetch(:bits_client)
     end
 
     def upload_path

@@ -14,6 +14,13 @@ class BitsClient
     end
   end
 
+  def upload_droplet(droplet_path)
+    with_file_attachment!(droplet_path, nil) do |file_attachment|
+      body = { droplet: file_attachment }
+      post('/droplets', body)
+    end
+  end
+
   def download_buildpack(guid)
     get("/buildpacks/#{guid}")
   end

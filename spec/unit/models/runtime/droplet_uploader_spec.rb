@@ -10,6 +10,12 @@ describe CloudController::DropletUploader do
     CloudController::DependencyLocator.instance.droplet_blobstore
   end
 
+  let(:bits_client) { nil }
+
+  before(:each) do
+    allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
+  end
+
   subject { described_class.new(app, blobstore) }
 
   describe '#upload' do
@@ -59,6 +65,30 @@ describe CloudController::DropletUploader do
         }.not_to change {
           app.reload.droplets.size
         }
+      end
+    end
+
+    context 'when using the bits service' do
+      let(:bits_client) { double(:bits_client) }
+      let(:temp_file_path) { temp_file_with_content.path }
+
+      it 'uploads to the bit_service' do
+        expect(bits_client).to receive(:upload_droplet).
+          with(temp_file_path).
+          and_return(double(:response, code: '201', body: '{ "guid": "foo" }'))
+        subject.upload(temp_file_path)
+        expect(app.droplet_hash).to eq('foo')
+      end
+
+      context 'when the bits service return an error' do
+        it 'raises an ApiError' do
+          allow(bits_client).to receive(:upload_droplet).
+            and_return(double(:response, code: '500'))
+
+          expect {
+            subject.upload(temp_file_path)
+          }.to raise_error VCAP::Errors::ApiError
+        end
       end
     end
   end

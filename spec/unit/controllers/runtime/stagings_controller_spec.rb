@@ -525,6 +525,51 @@ module VCAP::CloudController
           expect(last_response.status).to eq(404)
         end
       end
+
+      context 'when bits_service is enabled' do
+        let(:bits_client) { double(BitsClient) }
+        let(:guid) { 'some-guid' }
+        let(:url) { 'http://example.com/somewhere/else' }
+
+        before do
+          app_obj.droplet_hash = guid
+          app_obj.save
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:use_bits_service).and_return(true)
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
+          allow(bits_client).to receive(:download_url).with(:droplets, guid).and_return(url)
+        end
+
+        it 'redirects to the correct url' do
+          get "/staging/droplets/#{app_obj.guid}/download"
+          expect(last_response).to be_redirect
+          expect(last_response.header['Location']).to eq(url)
+        end
+
+        context 'when app does not exist' do
+          it 'returns an error' do
+            get '/staging/droplets/not-a-thing-app/download'
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'app does not have a droplet' do
+          let(:guid) { nil }
+          
+          it 'returns an error' do
+            get "/staging/droplets/#{app_obj.guid}/download"
+            expect(last_response.status).to eq(400)
+          end
+        end
+
+        context 'when download url is nil' do
+          let(:url) { nil }
+
+          it 'returns an error' do
+            get "/staging/droplets/#{app_obj.guid}/download"
+            expect(last_response.status).to eq(400)
+          end
+        end
+      end
     end
 
     describe 'POST /staging/buildpack_cache/:guid/upload' do
