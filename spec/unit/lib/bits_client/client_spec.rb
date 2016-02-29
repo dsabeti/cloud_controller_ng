@@ -84,4 +84,42 @@ describe BitsClient do
       end
     end
   end
+
+  context 'Droplets' do
+    describe '#upload_droplet' do
+      let(:file_path) { Tempfile.new('droplet').path }
+
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:post, 'http://bits-service.com/droplets').
+          with(body: /.*droplet".*/).
+          to_return(status: 201)
+
+        subject.upload_droplet(file_path)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:post, 'http://bits-service.com/droplets').
+          to_return(status: 201)
+
+        response = subject.upload_droplet(file_path)
+        expect(response.code).to eq('201')
+      end
+
+      context 'when invalid droplet is given' do
+        it 'raises the correct exception' do
+          expect {
+            subject.upload_droplet('/not-here')
+          }.to raise_error(BitsClient::Errors::FileDoesNotExist)
+        end
+      end
+    end
+
+    describe '#download_url' do
+      it 'returns the bits-service download endpoint for the guid' do
+        url = subject.download_url(:droplets, '1234')
+        expect(url).to eq('http://bits-service.com/droplets/1234')
+      end
+    end
+  end
 end
