@@ -41,6 +41,30 @@ describe BitsClient do
       end
     end
 
+    describe '#matches' do
+      let(:resources) do
+        [{ 'sha1' => 'abcde' }, { 'sha1' => '12345' }]
+      end
+
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:post, 'http://bits-service.com/app_stash/matches').
+          with(body: resources.to_json).
+          to_return(status: 200, body: [].to_json)
+
+        subject.matches(resources.to_json)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns a response object' do
+        stub_request(:post, 'http://bits-service.com/app_stash/matches').
+          with(body: resources.to_json).
+          to_return(status: 200, body: [{ 'sha1' => 'abcde' }].to_json)
+
+        response = subject.matches(resources.to_json)
+        expect(response.code).to eq('200')
+      end
+    end
+
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:buildpacks, '1234')

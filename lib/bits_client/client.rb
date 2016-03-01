@@ -10,7 +10,7 @@ class BitsClient
   def upload_buildpack(buildpack_path, filename)
     with_file_attachment!(buildpack_path, filename) do |file_attachment|
       body = { buildpack: file_attachment }
-      post('/buildpacks', body)
+      multipart_post('/buildpacks', body)
     end
   end
 
@@ -37,6 +37,10 @@ class BitsClient
     File.join(endpoint.to_s, resource_type.to_s, guid.to_s)
   end
 
+  def matches(resources_json)
+    post('/app_stash/matches', resources_json)
+  end
+
   private
 
   attr_reader :endpoint
@@ -61,8 +65,14 @@ class BitsClient
     http_client.request(request)
   end
 
-  def post(path, body)
-    request = Net::HTTP::Post::Multipart.new(path, body)
+  def post(path, body, header={})
+    request = Net::HTTP::Post.new(path, header)
+    request.body = body
+    http_client.request(request)
+  end
+
+  def multipart_post(path, body, header={})
+    request = Net::HTTP::Post::Multipart.new(path, body, header)
     http_client.request(request)
   end
 
