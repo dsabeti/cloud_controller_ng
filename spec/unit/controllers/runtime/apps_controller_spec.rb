@@ -1011,7 +1011,7 @@ module VCAP::CloudController
 
         context 'when app does not exist' do
           it 'returns an error' do
-            get "/v2/apps/not-a-thing-app/droplet/download", '', json_headers(admin_headers)
+            get '/v2/apps/not-a-thing-app/droplet/download', '', json_headers(admin_headers)
             expect(last_response.status).to eq(404)
           end
         end
@@ -1033,7 +1033,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq(404)
           end
         end
-
       end
     end
 
