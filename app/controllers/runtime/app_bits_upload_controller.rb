@@ -28,7 +28,9 @@ module VCAP::CloudController
 
       raise Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'missing :resources') unless params['resources']
       uploaded_zip_of_files_not_in_blobstore_path = CloudController::DependencyLocator.instance.upload_handler.uploaded_file(params, 'application')
-      app_bits_packer_job = Jobs::Runtime::AppBitsPacker.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param('resources'))
+      packer_class = use_bits_service ? Jobs::Runtime::ExternalPacker : Jobs::Runtime::AppBitsPacker
+
+      app_bits_packer_job = packer_class.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param('resources'))
 
       if async?
         job = Jobs::Enqueuer.new(app_bits_packer_job, queue: Jobs::LocalQueue.new(config)).enqueue
@@ -73,6 +75,10 @@ module VCAP::CloudController
       MultiJson.load(raw)
     rescue MultiJson::ParseError
       raise Errors::ApiError.new_from_details('AppBitsUploadInvalid', "invalid :#{name}")
+    end
+
+    def use_bits_service
+      !!CloudController::DependencyLocator.instance.use_bits_service
     end
   end
 end

@@ -41,6 +41,17 @@ class BitsClient
     post('/app_stash/matches', resources_json)
   end
 
+  def upload_entries(entries_path)
+    with_file_attachment!(entries_path, 'entries.zip') do |file_attachment|
+      body = { application: file_attachment }
+      multipart_post('/app_stash/entries', body)
+    end
+  end
+
+  def bundles(resources_json)
+    post('/app_stash/bundles', resources_json)
+  end
+
   private
 
   attr_reader :endpoint

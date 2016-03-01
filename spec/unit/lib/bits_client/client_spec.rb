@@ -41,30 +41,6 @@ describe BitsClient do
       end
     end
 
-    describe '#matches' do
-      let(:resources) do
-        [{ 'sha1' => 'abcde' }, { 'sha1' => '12345' }]
-      end
-
-      it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/app_stash/matches').
-          with(body: resources.to_json).
-          to_return(status: 200, body: [].to_json)
-
-        subject.matches(resources.to_json)
-        expect(request).to have_been_requested
-      end
-
-      it 'returns a response object' do
-        stub_request(:post, 'http://bits-service.com/app_stash/matches').
-          with(body: resources.to_json).
-          to_return(status: 200, body: [{ 'sha1' => 'abcde' }].to_json)
-
-        response = subject.matches(resources.to_json)
-        expect(response.code).to eq('200')
-      end
-    end
-
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:buildpacks, '1234')
@@ -161,6 +137,80 @@ describe BitsClient do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:droplets, '1234')
         expect(url).to eq('http://bits-service.com/droplets/1234')
+      end
+    end
+  end
+
+  context 'AppStash' do
+    describe '#matches' do
+      let(:resources) do
+        [{ 'sha1' => 'abcde' }, { 'sha1' => '12345' }]
+      end
+
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:post, 'http://bits-service.com/app_stash/matches').
+          with(body: resources.to_json).
+          to_return(status: 200, body: [].to_json)
+
+        subject.matches(resources.to_json)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns a response object' do
+        stub_request(:post, 'http://bits-service.com/app_stash/matches').
+          with(body: resources.to_json).
+          to_return(status: 200, body: [{ 'sha1' => 'abcde' }].to_json)
+
+        response = subject.matches(resources.to_json)
+        expect(response.code).to eq('200')
+      end
+    end
+
+    describe '#upload_entries' do
+      let(:zip) { Tempfile.new('entry.zip') }
+
+      it 'posts a zip file with new bits' do
+        request = stub_request(:post, 'http://bits-service.com/app_stash/entries').
+          with(body: /.*application".*/).
+          to_return(status: 201)
+
+        subject.upload_entries(zip)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:post, 'http://bits-service.com/app_stash/entries').
+          to_return(status: 201, body: 'ok')
+        expect(subject.upload_entries(zip).body).to eq('ok')
+        expect(subject.upload_entries(zip).code).to eq('201')
+      end
+    end
+
+    describe '#bundles' do
+      let(:order) {
+        [{ 'fn' => 'app.rb', 'sha1' => '12345' }]
+      }
+
+      let(:content_bits) { 'tons of bits as ordered' }
+
+      it 'makes the correct request to the bits service' do
+        request = stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+          with(body: order.to_json).
+          to_return(status: 200, body: content_bits)
+
+        subject.bundles(order.to_json)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the response' do
+        stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+          with(body: order.to_json).
+          to_return(status: 200, body: content_bits)
+
+        response = subject.bundles(order.to_json)
+
+        expect(response.body).to eq(content_bits)
+        expect(response.code).to eq('200')
       end
     end
   end
