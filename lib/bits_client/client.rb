@@ -14,6 +14,14 @@ class BitsClient
     end
   end
 
+  def download_buildpack(guid)
+    get("/buildpacks/#{guid}")
+  end
+
+  def delete_buildpack(guid)
+    delete("/buildpacks/#{guid}")
+  end
+
   def upload_droplet(droplet_path)
     with_file_attachment!(droplet_path, nil) do |file_attachment|
       body = { droplet: file_attachment }
@@ -21,12 +29,8 @@ class BitsClient
     end
   end
 
-  def download_buildpack(guid)
-    get("/buildpacks/#{guid}")
-  end
-
-  def delete_buildpack(guid)
-    delete("/buildpacks/#{guid}")
+  def delete_droplet(guid)
+    delete("/droplets/#{guid}")
   end
 
   def download_url(resource_type, guid)
