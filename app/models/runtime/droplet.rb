@@ -28,6 +28,8 @@ module VCAP::CloudController
     end
 
     def self.droplet_key(app_guid, digest)
+      return digest if use_bits_service
+
       File.join(app_guid, digest)
     end
 
@@ -56,6 +58,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def self.use_bits_service
+      CloudController::DependencyLocator.instance.use_bits_service
+    end
 
     def blobstore
       CloudController::DependencyLocator.instance.droplet_blobstore

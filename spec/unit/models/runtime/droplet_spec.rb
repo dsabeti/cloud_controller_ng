@@ -87,6 +87,16 @@ module VCAP::CloudController
       it 'combines app guid and the given digests' do
         expect(Droplet.droplet_key('abc', 'xyz')).to eql('abc/xyz')
       end
+
+      context 'when bits-service is enabled' do
+        before(:each) do
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:use_bits_service).and_return(true)
+        end
+
+        it 'uses only the digest as key' do
+          expect(Droplet.droplet_key('abc', 'xyz')).to eql('xyz')
+        end
+      end
     end
 
     describe 'update_cached_docker_image' do
