@@ -115,6 +115,24 @@ describe BitsClient do
       end
     end
 
+    describe '#delete_droplet' do
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+          to_return(status: 204)
+
+        subject.delete_droplet(guid)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+          to_return(status: 404)
+
+        response = subject.delete_droplet(guid)
+        expect(response.code).to eq('404')
+      end
+    end
+
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:droplets, '1234')

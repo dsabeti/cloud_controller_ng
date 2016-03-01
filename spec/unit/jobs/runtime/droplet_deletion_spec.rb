@@ -46,6 +46,19 @@ module VCAP::CloudController
             expect { job.perform }.to raise_error(Errno::EINVAL)
           end
         end
+
+        context 'when bits-service is enabled' do
+          let(:bits_client) { double(BitsClient) }
+
+          before(:each) do
+            allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
+          end
+
+          it 'should delete the droplet' do
+            expect(bits_client).to receive(:delete_droplet).with(new_droplet_key)
+            job.perform
+          end
+        end
       end
 
       it 'knows its job name' do

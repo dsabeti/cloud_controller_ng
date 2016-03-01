@@ -12,6 +12,12 @@ module VCAP::CloudController
         def perform
           logger = Steno.logger('cc.background')
           logger.info("Deleting droplet '#{new_droplet_key}' (and '#{old_droplet_key}') from droplet blobstore")
+
+          if use_bits_service
+            bits_client.delete_droplet(new_droplet_key)
+            return
+          end
+
           blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
           blobstore.delete(new_droplet_key)
           begin
@@ -30,6 +36,16 @@ module VCAP::CloudController
 
         def max_attempts
           3
+        end
+
+        private
+
+        def bits_client
+          @bits_client ||= CloudController::DependencyLocator.instance.bits_client
+        end
+
+        def use_bits_service
+          !!bits_client
         end
       end
     end
