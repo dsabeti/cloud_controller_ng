@@ -3,7 +3,7 @@ require 'presenters/system_env_presenter'
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository, :droplet_blobstore, :blob_sender]
+      [:app_event_repository, :droplet_blobstore, :blob_sender, :use_bits_service, :bits_client]
     end
 
     define_attributes do
@@ -106,6 +106,8 @@ module VCAP::CloudController
       @app_event_repository = dependencies.fetch(:app_event_repository)
       @blobstore = dependencies.fetch(:droplet_blobstore)
       @blob_sender = dependencies.fetch(:blob_sender)
+      @use_bits_service = dependencies.fetch(:use_bits_service)
+      @bits_client = dependencies.fetch(:bits_client)
     end
 
     def delete(guid)
@@ -130,8 +132,15 @@ module VCAP::CloudController
     get '/v2/apps/:guid/droplet/download', :download_droplet
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
-
       droplet = app.current_droplet
+
+      if @use_bits_service
+        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.droplet_hash
+        url = @bits_client.download_url(:droplets, droplet.droplet_hash)
+        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless url
+        redirect url
+      end
+
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
 
       blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: droplet.blob)
