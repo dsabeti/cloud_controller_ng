@@ -36,6 +36,10 @@ module CloudController
       def droplet_download_url(app)
         droplet = app.current_droplet
         return nil unless droplet
+        if use_bits_service?
+          return nil unless droplet.droplet_hash
+          return @bits_client.download_url(:droplets, droplet.droplet_hash)
+        end
 
         blob = droplet.blob
         url = blob.download_url if blob

@@ -254,6 +254,24 @@ module CloudController
               expect(url_generator.droplet_download_url(app)).to eql('http://example.com/blob')
             end
           end
+
+          context 'when bits-service is being used' do
+            let(:bits_client) { double(:bits_client) }
+
+            it 'calls bits_client for the download url' do
+              expect(bits_client).to receive(:download_url).with(:droplets, anything)
+              url_generator.droplet_download_url(app)
+            end
+
+            it 'returns the download_url from the bits_client' do
+              allow(bits_client).to receive(:download_url).
+                and_return('https://test.com/download-1')
+              #  allow_any_instance_of(Droplet).to receive(:droplet_hash).and_return('42')
+
+              expect(url_generator.droplet_download_url(app)).
+                to eq('https://test.com/download-1')
+            end
+          end
         end
 
         context 'download droplets permalink' do
