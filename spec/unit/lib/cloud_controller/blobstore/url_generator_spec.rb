@@ -126,6 +126,28 @@ module CloudController
             url_generator.droplet_download_url(app)
             expect(internal_url_generator).to have_received(:droplet_download_url).with(app)
           end
+
+          context 'when bits-service is being used' do
+            let(:bits_client) { double(:bits_client) }
+            let(:droplet) { double(:droplet, droplet_hash: 'abc')}
+
+            before do
+              allow(app).to receive(:current_droplet).and_return(droplet)
+            end
+
+            it 'calls bits_client for the download url' do
+              expect(bits_client).to receive(:download_url).with(:droplets, 'abc')
+              url_generator.droplet_download_url(app)
+            end
+
+            it 'returns the download_url from the bits_client' do
+              allow(bits_client).to receive(:download_url).
+                and_return('https://test.com/download-1')
+
+              expect(url_generator.droplet_download_url(app)).
+                to eq('https://test.com/download-1')
+            end
+          end
         end
 
         describe 'download unauthorized droplets permalink' do
