@@ -16,12 +16,6 @@ class BitsClient
     end
   end
 
-  def download_buildpack(guid)
-    get("/buildpacks/#{guid}").tap do |response|
-      validate_response_code!(200, response)
-    end
-  end
-
   def delete_buildpack(guid)
     delete("/buildpacks/#{guid}").tap do |response|
       validate_response_code!(204, response)
