@@ -1,3 +1,6 @@
 module BitsClient::Errors
-  class FileDoesNotExist < StandardError; end
+  class Error < StandardError; end
+
+  class FileDoesNotExist < Error; end
+  class UnexpectedResponseCode < Error; end
 end

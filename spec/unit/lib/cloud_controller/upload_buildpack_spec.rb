@@ -183,7 +183,7 @@ module VCAP::CloudController
         context 'when the bits service return an error' do
           it 'raises an ApiError' do
             allow(bits_client).to receive(:upload_buildpack).
-              and_return(double(:response, code: '500'))
+              and_raise(BitsClient::Errors::UnexpectedResponseCode)
 
             expect {
               upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)

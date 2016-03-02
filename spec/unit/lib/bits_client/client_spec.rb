@@ -29,7 +29,16 @@ describe BitsClient do
           to_return(status: 201)
 
         response = subject.upload_buildpack(file_path, file_name)
-        expect(response.code).to eq('201')
+        expect(response).to be_a(Net::HTTPCreated)
+      end
+
+      it 'raises an error when the response is not 201' do
+        stub_request(:post, 'http://bits-service.com/buildpacks').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.upload_buildpack(file_path, file_name)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
 
       context 'when invalid buildpack is given' do
@@ -59,10 +68,19 @@ describe BitsClient do
 
       it 'returns the request response' do
         stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 404)
+          to_return(status: 200)
 
         response = subject.download_buildpack(guid)
-        expect(response.code).to eq('404')
+        expect(response).to be_a(Net::HTTPOK)
+      end
+
+      it 'raises an error when the response is not 200' do
+        stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.download_buildpack(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
 
@@ -77,10 +95,19 @@ describe BitsClient do
 
       it 'returns the request response' do
         stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 404)
+          to_return(status: 204)
 
         response = subject.delete_buildpack(guid)
-        expect(response.code).to eq('404')
+        expect(response).to be_a(Net::HTTPNoContent)
+      end
+
+      it 'raises an error when the response is not 204' do
+        stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.delete_buildpack(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
   end
@@ -103,7 +130,16 @@ describe BitsClient do
           to_return(status: 201)
 
         response = subject.upload_droplet(file_path)
-        expect(response.code).to eq('201')
+        expect(response).to be_a(Net::HTTPCreated)
+      end
+
+      it 'raises an error when the response is not 201' do
+        stub_request(:post, 'http://bits-service.com/droplets').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.upload_droplet(file_path)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
 
       context 'when invalid droplet is given' do
@@ -126,10 +162,19 @@ describe BitsClient do
 
       it 'returns the request response' do
         stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
-          to_return(status: 404)
+          to_return(status: 204)
 
         response = subject.delete_droplet(guid)
-        expect(response.code).to eq('404')
+        expect(response).to be_a(Net::HTTPNoContent)
+      end
+
+      it 'raises an error when the response is not 204' do
+        stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.delete_droplet(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
 
@@ -156,13 +201,22 @@ describe BitsClient do
         expect(request).to have_been_requested
       end
 
-      it 'returns a response object' do
+      it 'returns the request response' do
         stub_request(:post, 'http://bits-service.com/app_stash/matches').
           with(body: resources.to_json).
-          to_return(status: 200, body: [{ 'sha1' => 'abcde' }].to_json)
+          to_return(status: 200, body: [].to_json)
 
         response = subject.matches(resources.to_json)
-        expect(response.code).to eq('200')
+        expect(response).to be_a(Net::HTTPOK)
+      end
+
+      it 'raises an error when the response is not 200' do
+        stub_request(:post, 'http://bits-service.com/app_stash/matches').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.matches(resources.to_json)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
 
@@ -180,9 +234,20 @@ describe BitsClient do
 
       it 'returns the request response' do
         stub_request(:post, 'http://bits-service.com/app_stash/entries').
-          to_return(status: 201, body: 'ok')
-        expect(subject.upload_entries(zip).body).to eq('ok')
-        expect(subject.upload_entries(zip).code).to eq('201')
+          with(body: /.*application".*/).
+          to_return(status: 201)
+
+        response = subject.upload_entries(zip)
+        expect(response).to be_a(Net::HTTPCreated)
+      end
+
+      it 'raises an error when the response is not 201' do
+        stub_request(:post, 'http://bits-service.com/app_stash/entries').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.upload_entries(zip)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
 
@@ -202,15 +267,22 @@ describe BitsClient do
         expect(request).to have_been_requested
       end
 
-      it 'returns the response' do
+      it 'returns the request response' do
         stub_request(:post, 'http://bits-service.com/app_stash/bundles').
           with(body: order.to_json).
           to_return(status: 200, body: content_bits)
 
         response = subject.bundles(order.to_json)
+        expect(response).to be_a(Net::HTTPOK)
+      end
 
-        expect(response.body).to eq(content_bits)
-        expect(response.code).to eq('200')
+      it 'raises an error when the response is not 200' do
+        stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.bundles(order.to_json)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
   end

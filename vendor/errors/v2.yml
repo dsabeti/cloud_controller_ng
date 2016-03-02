@@ -849,9 +849,9 @@
   message: "Resource inside space %s must first be deleted, or specify recursive delete."
 
 290012:
-  name: BitsServiceInvalidResponse
+  name: BitsServiceError
   http_code: 500
-  message: "The bits service returned an invalid code: %s"
+  message: "The bits service returned an error: %s"
 
 300001:
   name: SecurityGroupInvalid
