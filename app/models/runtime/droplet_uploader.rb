@@ -32,8 +32,9 @@ module CloudController
 
     def upload_to_bits_service(file_path)
       response = bits_client.upload_droplet(file_path)
-      raise VCAP::Errors::ApiError.new_from_details('BitsServiceInvalidResponse', 'failed to upload buildpack') if response.code.to_i != 201
       JSON.parse(response.body)['guid']
+    rescue BitsClient::Errors::Error => e
+      raise VCAP::Errors::ApiError.new_from_details('BitsServiceError', e.message)
     end
 
     def use_bits_service?

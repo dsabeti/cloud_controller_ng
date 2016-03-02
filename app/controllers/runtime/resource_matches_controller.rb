@@ -6,11 +6,12 @@ module VCAP::CloudController
       FeatureFlag.raise_unless_enabled!('app_bits_upload') unless SecurityContext.admin?
 
       if use_bits_client?
-        response = bits_client.matches(body.read)
-        return response.body if response.code.to_i == 200
-
-        error = JSON.parse(response.body)
-        raise Errors::ApiError.new_from_details('BitsServiceInvalidResponse', error['description'])
+        begin
+          response = bits_client.matches(body.read)
+          return response.body
+        rescue BitsClient::Errors::Error => e
+          raise Errors::ApiError.new_from_details('BitsServiceError', e.message)
+        end
       end
 
       begin

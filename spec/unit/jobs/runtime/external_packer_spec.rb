@@ -14,12 +14,23 @@ module VCAP::CloudController
         ExternalPacker.new(app_guid, uploaded_path, fingerprints)
       end
 
+      let(:bits_service_config) do
+        {
+          bits_service: {
+            enabled: true,
+            endpoint: 'https://bits-service.example.com'
+          }
+        }
+      end
+
+      before do
+        TestConfig.override(bits_service_config)
+      end
+
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
         before do
-          TestConfig.override(bits_service_config)
-
           allow_any_instance_of(BitsClient).to receive(:upload_entries).
             and_return(double(:response, code: 201, body: receipt.to_json))
           allow_any_instance_of(BitsClient).to receive(:bundle).
@@ -65,6 +76,8 @@ module VCAP::CloudController
         end
 
         shared_examples 'a packaging failure' do
+          let(:expected_exception) { Errors::ApiError }
+
           before do
             allow(App).to receive(:find).and_return(app)
           end
@@ -82,27 +95,26 @@ module VCAP::CloudController
         end
 
         context 'when `upload_entries` fails' do
-          let(:expected_exception) { StandardError.new }
           before do
             allow_any_instance_of(BitsClient).to receive(:upload_entries).
-              and_raise(expected_exception)
+              and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
         end
 
         context 'when `bundle` fails' do
-          let(:expected_exception) { StandardError.new }
           before do
             allow_any_instance_of(BitsClient).to receive(:bundle).
-              and_raise(expected_exception)
+              and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
         end
 
         context 'when writing the package to a temp file fails' do
-          let(:expected_exception) { StandardError.new }
+          let(:expected_exception) { StandardError.new('some error') }
+
           before do
             allow(Tempfile).to receive(:new).
               and_raise(expected_exception)
@@ -112,7 +124,8 @@ module VCAP::CloudController
         end
 
         context 'when copying the package to the blobstore fails' do
-          let(:expected_exception) { StandardError.new }
+          let(:expected_exception) { StandardError.new('some error') }
+
           before do
             allow(package_blobstore).to receive(:cp_to_blobstore).
               and_raise(expected_exception)
@@ -122,20 +135,18 @@ module VCAP::CloudController
         end
 
         context 'when the bits service has an internal error on upload_entries' do
-          let(:expected_exception) { Errors::ApiError }
           before do
             allow_any_instance_of(BitsClient).to receive(:upload_entries).
-              and_return(double(:response, code: 500))
+              and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
         end
 
         context 'when the bits service has an internal error on bundle' do
-          let(:expected_exception) { Errors::ApiError }
           before do
             allow_any_instance_of(BitsClient).to receive(:bundle).
-              and_return(double(:response, code: 500))
+              and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
