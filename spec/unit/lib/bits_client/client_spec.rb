@@ -57,33 +57,6 @@ describe BitsClient do
       end
     end
 
-    describe '#download_buildpack' do
-      it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 200)
-
-        subject.download_buildpack(guid)
-        expect(request).to have_been_requested
-      end
-
-      it 'returns the request response' do
-        stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 200)
-
-        response = subject.download_buildpack(guid)
-        expect(response).to be_a(Net::HTTPOK)
-      end
-
-      it 'raises an error when the response is not 200' do
-        stub_request(:get, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 400, body: '{"description":"bits-failure"}')
-
-        expect {
-          subject.download_buildpack(guid)
-        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
-      end
-    end
-
     describe '#delete_buildpack' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
