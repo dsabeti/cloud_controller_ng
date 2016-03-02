@@ -83,7 +83,7 @@ describe CloudController::DropletUploader do
       context 'when the bits service return an error' do
         it 'raises an ApiError' do
           allow(bits_client).to receive(:upload_droplet).
-            and_return(double(:response, code: '500'))
+            and_raise(BitsClient::Errors::UnexpectedResponseCode)
 
           expect {
             subject.upload(temp_file_path)

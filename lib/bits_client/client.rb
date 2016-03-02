@@ -10,27 +10,37 @@ class BitsClient
   def upload_buildpack(buildpack_path, filename)
     with_file_attachment!(buildpack_path, filename) do |file_attachment|
       body = { buildpack: file_attachment }
-      multipart_post('/buildpacks', body)
+      multipart_post('/buildpacks', body).tap do |response|
+        validate_response_code!(201, response)
+      end
     end
   end
 
   def download_buildpack(guid)
-    get("/buildpacks/#{guid}")
+    get("/buildpacks/#{guid}").tap do |response|
+      validate_response_code!(200, response)
+    end
   end
 
   def delete_buildpack(guid)
-    delete("/buildpacks/#{guid}")
+    delete("/buildpacks/#{guid}").tap do |response|
+      validate_response_code!(204, response)
+    end
   end
 
   def upload_droplet(droplet_path)
     with_file_attachment!(droplet_path, nil) do |file_attachment|
       body = { droplet: file_attachment }
-      post('/droplets', body)
+      multipart_post('/droplets', body).tap do |response|
+        validate_response_code!(201, response)
+      end
     end
   end
 
   def delete_droplet(guid)
-    delete("/droplets/#{guid}")
+    delete("/droplets/#{guid}").tap do |response|
+      validate_response_code!(204, response)
+    end
   end
 
   def download_url(resource_type, guid)
@@ -38,23 +48,35 @@ class BitsClient
   end
 
   def matches(resources_json)
-    post('/app_stash/matches', resources_json)
+    post('/app_stash/matches', resources_json).tap do |response|
+      validate_response_code!(200, response)
+    end
   end
 
   def upload_entries(entries_path)
     with_file_attachment!(entries_path, 'entries.zip') do |file_attachment|
       body = { application: file_attachment }
-      multipart_post('/app_stash/entries', body)
+      multipart_post('/app_stash/entries', body).tap do |response|
+        validate_response_code!(201, response)
+      end
     end
   end
 
   def bundles(resources_json)
-    post('/app_stash/bundles', resources_json)
+    post('/app_stash/bundles', resources_json).tap do |response|
+      validate_response_code!(200, response)
+    end
   end
 
   private
 
   attr_reader :endpoint
+
+  def validate_response_code!(expected, response)
+    return if expected.to_i == response.code.to_i
+    error = JSON.parse(response.body)
+    fail Errors::UnexpectedResponseCode.new(error['description'])
+  end
 
   def with_file_attachment!(file_path, filename, &block)
     validate_file! file_path

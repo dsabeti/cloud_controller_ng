@@ -27,18 +27,17 @@ module VCAP::CloudController
           bits_client           = CloudController::DependencyLocator.instance.bits_client
 
           entries_response = bits_client.upload_entries(uploaded_compressed_path)
-          raise Errors::ApiError.new_from_details('BitsServiceInvalidResponse', 'failed to upload app entries') if entries_response.code.to_i != 201
           receipt = JSON.parse(entries_response.body)
           fingerprints.concat(receipt)
 
           package_response = bits_client.bundle(fingerprints)
-          raise Errors::ApiError.new_from_details('BitsServiceInvalidResponse', 'failed to download app bundle') if package_response.code.to_i != 200
           package = Tempfile.new('package.zip')
           package.write(package_response.body)
           package.close
           package_blobstore.cp_to_blobstore(package.path, app_guid)
-        rescue
+        rescue => e
           app.mark_as_failed_to_stage
+          raise Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsClient::Errors::Error)
           raise
         end
 

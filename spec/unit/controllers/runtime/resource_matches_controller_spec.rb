@@ -106,16 +106,16 @@ module VCAP::CloudController
       context 'when the bits_client response is not 200' do
         before do
           allow_any_instance_of(BitsClient).to receive(:matches).
-            and_return(double(:response, code: 400, body: '{"description":"Failed in bits-service"}'))
+            and_raise(BitsClient::Errors::Error, 'Failed in bits-service')
         end
 
         it 'retuns HTTP status 500' do
-          send(:put, '/v2/resource_match', '[]', admin_headers)
+          put '/v2/resource_match', '[]', admin_headers
           expect(last_response.status).to eq(500)
         end
 
         it 'returns an error description' do
-          send(:put, '/v2/resource_match', '[]', admin_headers)
+          put '/v2/resource_match', '[]', admin_headers
           error = JSON.parse(last_response.body)
           expect(error['description']).to match(/Failed in bits-service/)
         end
