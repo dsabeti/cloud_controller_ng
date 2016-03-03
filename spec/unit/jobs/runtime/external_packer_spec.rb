@@ -48,7 +48,7 @@ module VCAP::CloudController
         it 'merges the bits-service receipt with the cli resources to ask for the bundles' do
           merged_fingerprints = fingerprints + receipt
           expect_any_instance_of(BitsClient).to receive(:bundles).
-            with(merged_fingerprints)
+            with(merged_fingerprints.to_json)
           job.perform
         end
 

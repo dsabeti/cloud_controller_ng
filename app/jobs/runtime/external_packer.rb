@@ -30,8 +30,9 @@ module VCAP::CloudController
           receipt = JSON.parse(entries_response.body)
           fingerprints.concat(receipt)
 
-          package_response = bits_client.bundles(fingerprints)
+          package_response = bits_client.bundles(fingerprints.to_json)
           package = Tempfile.new('package.zip')
+          package.binmode
           package.write(package_response.body)
           package.close
           package_blobstore.cp_to_blobstore(package.path, app_guid)
