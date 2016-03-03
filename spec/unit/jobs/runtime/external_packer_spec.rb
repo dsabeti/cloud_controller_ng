@@ -33,7 +33,7 @@ module VCAP::CloudController
         before do
           allow_any_instance_of(BitsClient).to receive(:upload_entries).
             and_return(double(:response, code: 201, body: receipt.to_json))
-          allow_any_instance_of(BitsClient).to receive(:bundle).
+          allow_any_instance_of(BitsClient).to receive(:bundles).
             and_return(double(:response, code: 200, body: 'contents'))
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).
             and_return(package_blobstore)
@@ -45,9 +45,9 @@ module VCAP::CloudController
           job.perform
         end
 
-        it 'merges the bits-service receipt with the cli resources to ask for the bundle' do
+        it 'merges the bits-service receipt with the cli resources to ask for the bundles' do
           merged_fingerprints = fingerprints + receipt
-          expect_any_instance_of(BitsClient).to receive(:bundle).
+          expect_any_instance_of(BitsClient).to receive(:bundles).
             with(merged_fingerprints)
           job.perform
         end
@@ -103,9 +103,9 @@ module VCAP::CloudController
           it_behaves_like 'a packaging failure'
         end
 
-        context 'when `bundle` fails' do
+        context 'when `bundles` fails' do
           before do
-            allow_any_instance_of(BitsClient).to receive(:bundle).
+            allow_any_instance_of(BitsClient).to receive(:bundles).
               and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 
@@ -143,9 +143,9 @@ module VCAP::CloudController
           it_behaves_like 'a packaging failure'
         end
 
-        context 'when the bits service has an internal error on bundle' do
+        context 'when the bits service has an internal error on bundles' do
           before do
-            allow_any_instance_of(BitsClient).to receive(:bundle).
+            allow_any_instance_of(BitsClient).to receive(:bundles).
               and_raise(BitsClient::Errors::UnexpectedResponseCode)
           end
 

@@ -30,7 +30,7 @@ module VCAP::CloudController
           receipt = JSON.parse(entries_response.body)
           fingerprints.concat(receipt)
 
-          package_response = bits_client.bundle(fingerprints)
+          package_response = bits_client.bundles(fingerprints)
           package = Tempfile.new('package.zip')
           package.write(package_response.body)
           package.close
