@@ -9,6 +9,8 @@ module VCAP::CloudController
       let(:package_blobstore) { double(:package_blobstore) }
       let(:receipt) { [{ 'sha1' => '12345', 'fn' => 'app.rb' }] }
       let(:fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
+      let(:package_file) { Tempfile.new('package') }
+      let(:package_sha) { Digester.new().digest_file(package_file) }
 
       subject(:job) do
         ExternalPacker.new(app_guid, uploaded_path, fingerprints)
@@ -38,6 +40,7 @@ module VCAP::CloudController
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).
             and_return(package_blobstore)
           allow(package_blobstore).to receive(:cp_to_blobstore)
+          allow(Tempfile).to receive(:new).and_return(package_file)
         end
 
         it 'uses the bits_client to upload the zip file' do
@@ -73,6 +76,11 @@ module VCAP::CloudController
           job.perform
 
           expect(logger).to have_received(:error).with("App not found: #{app_guid}")
+        end
+
+        it 'sets the package hash in the app' do
+          job.perform
+          expect(app.reload.package_hash).to eq(package_sha)
         end
 
         shared_examples 'a packaging failure' do
