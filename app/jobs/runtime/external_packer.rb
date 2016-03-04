@@ -30,11 +30,14 @@ module VCAP::CloudController
           fingerprints.concat(receipt)
 
           package_response = bits_client.bundles(fingerprints.to_json)
-          package = Tempfile.new('package.zip')
-          package.binmode
+          package = Tempfile.new('package.zip').binmode
           package.write(package_response.body)
           package.close
+
           package_blobstore.cp_to_blobstore(package.path, app_guid)
+
+          app.package_hash = Digester.new.digest_path(package.path)
+          app.save
         rescue => e
           app.mark_as_failed_to_stage
           raise Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsClient::Errors::Error)
