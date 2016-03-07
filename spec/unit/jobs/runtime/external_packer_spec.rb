@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:receipt) { [{ 'sha1' => '12345', 'fn' => 'app.rb' }] }
       let(:fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
       let(:package_file) { Tempfile.new('package') }
-      let(:package_sha) { Digester.new().digest_file(package_file) }
+      let(:package_sha) { Digester.new.digest_file(package_file) }
 
       subject(:job) do
         ExternalPacker.new(app_guid, uploaded_path, fingerprints)
