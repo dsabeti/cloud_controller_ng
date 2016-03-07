@@ -25,9 +25,11 @@ module VCAP::CloudController
           package_blobstore     = CloudController::DependencyLocator.instance.package_blobstore
           bits_client           = CloudController::DependencyLocator.instance.bits_client
 
-          entries_response = bits_client.upload_entries(uploaded_compressed_path)
-          receipt = JSON.parse(entries_response.body)
-          fingerprints.concat(receipt)
+          if uploaded_compressed_path.to_s != ''
+            entries_response = bits_client.upload_entries(uploaded_compressed_path)
+            receipt = JSON.parse(entries_response.body)
+            fingerprints.concat(receipt)
+          end
 
           package_response = bits_client.bundles(fingerprints.to_json)
           package = Tempfile.new('package.zip').binmode

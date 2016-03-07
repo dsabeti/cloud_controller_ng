@@ -129,7 +129,7 @@ module CloudController
 
           context 'when bits-service is being used' do
             let(:bits_client) { double(:bits_client) }
-            let(:droplet) { double(:droplet, droplet_hash: 'abc')}
+            let(:droplet) { double(:droplet, droplet_hash: 'abc') }
 
             before do
               allow(app).to receive(:current_droplet).and_return(droplet)

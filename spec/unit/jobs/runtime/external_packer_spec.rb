@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:receipt) { [{ 'sha1' => '12345', 'fn' => 'app.rb' }] }
       let(:fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
       let(:package_file) { Tempfile.new('package') }
-      let(:package_sha) { Digester.new().digest_file(package_file) }
+      let(:package_sha) { Digester.new.digest_file(package_file) }
 
       subject(:job) do
         ExternalPacker.new(app_guid, uploaded_path, fingerprints)
@@ -99,6 +99,33 @@ module VCAP::CloudController
             expect {
               job.perform
             }.to raise_error(expected_exception)
+          end
+        end
+
+        context 'when no new bits are being uploaded' do
+          let(:uploaded_path) { nil }
+
+          it 'does not upload new entries to the bits service' do
+            expect_any_instance_of(BitsClient).to_not receive(:upload_entries)
+            job.perform
+          end
+
+          it 'downloads a bundle with the original fingerprints' do
+            expect_any_instance_of(BitsClient).to receive(:bundles).with(fingerprints.to_json)
+            job.perform
+          end
+
+          it 'stores the package received from bits-service in the blobstore' do
+            expect(package_blobstore).to receive(:cp_to_blobstore) do |package_path, received_app_guid|
+              expect(File.read(package_path)).to eq('contents')
+              expect(received_app_guid).to eq(app_guid)
+            end
+            job.perform
+          end
+
+          it 'sets the package hash in the app' do
+            job.perform
+            expect(app.reload.package_hash).to eq(package_sha)
           end
         end
 
