@@ -102,6 +102,33 @@ module VCAP::CloudController
           end
         end
 
+        context 'when no new bits are being uploaded' do
+          let(:uploaded_path) { nil }
+
+          it 'does not upload new entries to the bits service' do
+            expect_any_instance_of(BitsClient).to_not receive(:upload_entries)
+            job.perform
+          end
+
+          it 'downloads a bundle with the original fingerprints' do
+            expect_any_instance_of(BitsClient).to receive(:bundles).with(fingerprints.to_json)
+            job.perform
+          end
+
+          it 'stores the package received from bits-service in the blobstore' do
+            expect(package_blobstore).to receive(:cp_to_blobstore) do |package_path, received_app_guid|
+              expect(File.read(package_path)).to eq('contents')
+              expect(received_app_guid).to eq(app_guid)
+            end
+            job.perform
+          end
+
+          it 'sets the package hash in the app' do
+            job.perform
+            expect(app.reload.package_hash).to eq(package_sha)
+          end
+        end
+
         context 'when `upload_entries` fails' do
           before do
             allow_any_instance_of(BitsClient).to receive(:upload_entries).
