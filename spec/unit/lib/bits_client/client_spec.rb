@@ -10,6 +10,22 @@ describe BitsClient do
 
   subject { BitsClient.new(endpoint: endpoint) }
 
+  describe 'forwards vcap-request-id' do
+    let(:file_path) { Tempfile.new('buildpack').path }
+    let(:file_name) { 'my-buildpack.zip' }
+
+    it 'includes the header with a POST request' do
+      expect(VCAP::Request).to receive(:current_id).and_return('0815')
+
+      request = stub_request(:post, 'http://bits-service.com/buildpacks').
+        with(body: /.*buildpack".*/, headers: { 'X-Vcap-Request_Id' => '0815' }).
+        to_return(status: 201)
+
+      subject.upload_buildpack(file_path, file_name)
+      expect(request).to have_been_requested
+    end
+  end
+
   context 'Buildpacks' do
     describe '#upload_buildpack' do
       let(:file_path) { Tempfile.new('buildpack').path }

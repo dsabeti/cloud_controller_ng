@@ -89,22 +89,28 @@ class BitsClient
 
   def get(path)
     request = Net::HTTP::Get.new(path)
-    http_client.request(request)
+    do_request(request)
   end
 
   def post(path, body, header={})
     request = Net::HTTP::Post.new(path, header)
+
     request.body = body
-    http_client.request(request)
+    do_request(request)
   end
 
   def multipart_post(path, body, header={})
     request = Net::HTTP::Post::Multipart.new(path, body, header)
-    http_client.request(request)
+    do_request(request)
   end
 
   def delete(path)
     request = Net::HTTP::Delete.new(path)
+    do_request(request)
+  end
+
+  def do_request(request)
+    request.add_field(VCAP::Request::HEADER_NAME, VCAP::Request.current_id)
     http_client.request(request)
   end
 
