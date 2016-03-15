@@ -86,6 +86,24 @@ module VCAP::CloudController
           expect(job.queue).to eq('cc-generic')
         end
 
+        context 'when bits service is enabled' do
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:use_bits_service).and_return(true)
+            allow(BlobstoreDelete).to receive(:new).and_call_original
+          end
+
+          it 'passes the package_hash to the delete job' do
+            expect(BlobstoreDelete).to receive(:new).with(package_hash, :package_blobstore).and_call_original
+            subject
+          end
+
+          it 'enques the job using the correct queue' do
+            delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
+            expect { subject }.to change { delete_package_jobs.count }.by(1)
+            expect(delete_package_jobs.last.queue).to eq('cc-generic')
+          end
+        end
+
         context 'when the app is a v3 process' do
           before do
             allow(app).to receive(:is_v3?).and_return(true)

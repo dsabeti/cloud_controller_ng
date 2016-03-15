@@ -159,6 +159,108 @@ describe BitsClient do
     end
   end
 
+  context 'Packages' do
+    describe '#upload_package' do
+      let(:file_path) { Tempfile.new('package').path }
+
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:post, 'http://bits-service.com/packages').
+          with(body: /.*package".*/).
+          to_return(status: 201)
+
+        subject.upload_package(file_path)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:post, 'http://bits-service.com/packages').
+          to_return(status: 201)
+
+        response = subject.upload_package(file_path)
+        expect(response).to be_a(Net::HTTPCreated)
+      end
+
+      it 'raises an error when the response is not 201' do
+        stub_request(:post, 'http://bits-service.com/packages').
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.upload_package(file_path)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
+      end
+
+      context 'when invalid package is given' do
+        it 'raises the correct exception' do
+          expect {
+            subject.upload_package('/not-here')
+          }.to raise_error(BitsClient::Errors::FileDoesNotExist)
+        end
+      end
+    end
+
+    describe '#delete_package' do
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 204)
+
+        subject.delete_package(guid)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 204)
+
+        response = subject.delete_package(guid)
+        expect(response).to be_a(Net::HTTPNoContent)
+      end
+
+      it 'raises an error when the response is not 204' do
+        stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.delete_package(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
+      end
+    end
+
+    describe '#download_package' do
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:get, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 200)
+
+        subject.download_package(guid)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:get, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 200)
+
+        response = subject.download_package(guid)
+        expect(response).to be_a(Net::HTTPOK)
+      end
+
+      it 'raises an error when the response is not 204' do
+        stub_request(:get, "http://bits-service.com/packages/#{guid}").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.download_package(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
+      end
+
+    end
+
+    describe '#download_url' do
+      it 'returns the bits-service download endpoint for the guid' do
+        url = subject.download_url(:packages, '1234')
+        expect(url).to eq('http://bits-service.com/packages/1234')
+      end
+    end
+  end
+
   context 'AppStash' do
     describe '#matches' do
       let(:resources) do
