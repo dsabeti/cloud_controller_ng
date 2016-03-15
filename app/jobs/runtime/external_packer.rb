@@ -22,7 +22,6 @@ module VCAP::CloudController
             return
           end
 
-          package_blobstore     = CloudController::DependencyLocator.instance.package_blobstore
           bits_client           = CloudController::DependencyLocator.instance.bits_client
 
           if uploaded_compressed_path.to_s != ''
@@ -36,9 +35,7 @@ module VCAP::CloudController
           package.write(package_response.body)
           package.close
 
-          package_blobstore.cp_to_blobstore(package.path, app_guid)
-
-          app.package_hash = Digester.new.digest_path(package.path)
+          app.package_hash = upload_package(bits_client, package.path)
           app.save
         rescue => e
           app.mark_as_failed_to_stage
@@ -56,6 +53,15 @@ module VCAP::CloudController
 
         def logger
           @logger ||= Steno.logger('cc.background')
+        end
+
+        private
+
+        def upload_package(bits_client, file_path)
+          response = bits_client.upload_package(file_path)
+          JSON.parse(response.body)['guid']
+        rescue BitsClient::Errors::Error => e
+          raise VCAP::Errors::ApiError.new_from_details('BitsServiceError', e.message)
         end
       end
     end

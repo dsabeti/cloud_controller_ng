@@ -4,10 +4,9 @@ module CloudController
   module Blobstore
     describe ClientProvider do
       let(:options) { { blobstore_type: blobstore_type } }
+      let(:blobstore_type) { nil }
 
       context 'when no type is requested' do
-        let(:blobstore_type) { nil }
-
         before do
           options.merge!(fog_connection: {})
         end
@@ -66,6 +65,15 @@ module CloudController
           allow(DavClient).to receive(:new).and_call_original
           ClientProvider.provide(options: options, directory_key: 'key')
           expect(DavClient).to have_received(:new)
+        end
+      end
+
+      context 'when a bits client is being passed' do
+        let(:bits_client) { double(BitsClient) }
+
+        it 'provides a bits service client' do
+          expect(BitsServiceClient).to receive(:new).with(bits_client: bits_client, resource_type: 'foo').and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key', bits_client: bits_client, resource_type: 'foo')
         end
       end
     end

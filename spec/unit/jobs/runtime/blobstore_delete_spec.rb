@@ -75,34 +75,6 @@ module VCAP::CloudController
       it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:blobstore_delete)
       end
-
-      context 'when the bits service is being used' do
-        let(:bits_client) { double(BitsClient, delete_buildpack: nil) }
-
-        let(:blobstore_type) { :buildpack_blobstore }
-
-        let(:buildpack) { double(Buildpack, key: key) }
-
-        before(:each) do
-          allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
-          allow(Buildpack).to receive(:find).with(key: key).and_return(buildpack)
-        end
-
-        it 'deletes the blob from the bits service' do
-          expect(bits_client).to receive(:delete_buildpack).with(key)
-          job.perform
-        end
-
-        context 'and the blobstore is not a buildpack blobstore' do
-          let(:blobstore_type) { :droplet_blobstore }
-
-          it 'does not attempt to delete a buildpack from the bits service' do
-            expect(Buildpack).to_not receive(:find)
-            expect(bits_client).to_not receive(:delete_buildpack)
-            job.perform
-          end
-        end
-      end
     end
   end
 end
