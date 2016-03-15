@@ -37,6 +37,27 @@ class BitsClient
     end
   end
 
+  def upload_package(package_path)
+    with_file_attachment!(package_path, nil) do |file_attachment|
+      body = { package: file_attachment }
+      multipart_post('/packages', body).tap do |response|
+        validate_response_code!(201, response)
+      end
+    end
+  end
+
+  def delete_package(guid)
+    delete("/packages/#{guid}").tap do |response|
+      validate_response_code!(204, response)
+    end
+  end
+
+  def download_package(guid)
+    get(download_url(:packages, guid)).tap do |response|
+      validate_response_code!(200, response)
+    end
+  end
+
   def download_url(resource_type, guid)
     File.join(endpoint.to_s, resource_type.to_s, guid.to_s)
   end

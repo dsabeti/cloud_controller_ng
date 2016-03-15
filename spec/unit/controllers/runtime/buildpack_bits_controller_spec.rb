@@ -183,6 +183,7 @@ module VCAP::CloudController
 
             allow(CloudController::DependencyLocator.instance.upload_handler).to receive(:uploaded_file).and_return(valid_zip)
             allow(CloudController::DependencyLocator.instance.upload_handler).to receive(:uploaded_filename).and_return('buildpack.zip')
+            allow_any_instance_of(BitsClient).to receive(:delete_buildpack)
           end
 
           it 'still returns 201 on success' do

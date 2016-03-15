@@ -7,7 +7,7 @@ module VCAP::CloudController
       blob = blobstore.blob(blobstore_key)
       return unless blob
 
-      attrs = blob.attributes(*CloudController::Blobstore::Blob::CACHE_ATTRIBUTES)
+      attrs = blob.respond_to?(:attributes) ? blob.attributes(*CloudController::Blobstore::Blob::CACHE_ATTRIBUTES) : nil
       blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(blobstore_key, :buildpack_blobstore, attrs)
       Delayed::Job.enqueue(blobstore_delete, queue: 'cc-generic', run_at: Delayed::Job.db_time_now + staging_timeout)
     end

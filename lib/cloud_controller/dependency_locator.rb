@@ -99,7 +99,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:app_package_directory_key)
+        directory_key: options.fetch(:app_package_directory_key),
+        resource_type: :packages,
+        bits_client: bits_client
       )
     end
 
@@ -117,7 +119,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks')
+        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
+        resource_type: :buildpacks,
+        bits_client: bits_client
       )
     end
 

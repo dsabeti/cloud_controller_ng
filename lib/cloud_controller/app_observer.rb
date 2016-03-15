@@ -50,7 +50,9 @@ module VCAP::CloudController
 
       def delete_package(app)
         return if app.is_v3?
-        delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :package_blobstore)
+
+        guid = CloudController::DependencyLocator.instance.use_bits_service ? app.package_hash : app.guid
+        delete_job = Jobs::Runtime::BlobstoreDelete.new(guid, :package_blobstore)
         Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       end
 

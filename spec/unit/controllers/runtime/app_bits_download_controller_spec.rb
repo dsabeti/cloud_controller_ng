@@ -39,6 +39,37 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
         end
       end
+
+      context 'when bits service is enabled' do
+        let(:bits_client) { double(BitsClient) }
+        let(:url) { 'package-download-url' }
+        let(:package_hash) { 'package-guid' }
+        let(:app_guid) { 'app-guid' }
+        let(:app_model) { double(App, guid: app_guid, package_hash: package_hash) }
+
+        before do
+          allow_any_instance_of(Security::AccessContext).to receive(:cannot?).with(Symbol, app_model).and_return(false)
+          allow(App).to receive(:find).with(guid: app_guid).and_return(app_model)
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
+          allow(bits_client).to receive(:download_url).with(:packages, package_hash).and_return(url)
+        end
+
+        it 'redirects to the correct url' do
+          get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+          expect(last_response.status).to eq(302)
+          expect(last_response.headers.fetch('Location')).to eq(url)
+        end
+
+        context 'and package hash is not being set' do
+          let(:package_hash) { nil }
+
+          it 'raises the correct error' do
+            get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+            expect(last_response.status).to eq(404)
+            expect(JSON.parse(last_response.body)['description']).to include app_guid
+          end
+        end
+      end
     end
   end
 end
