@@ -58,6 +58,12 @@ class BitsClient
     end
   end
 
+  def duplicate_package(guid)
+    put("/packages/#{guid}/duplicate").tap do |response|
+      validate_response_code!(201, response)
+    end
+  end
+
   def download_url(resource_type, guid)
     File.join(endpoint.to_s, resource_type.to_s, guid.to_s)
   end
@@ -118,6 +124,10 @@ class BitsClient
 
     request.body = body
     do_request(request)
+  end
+
+  def put(path)
+    do_request(Net::HTTP::Put.new(path))
   end
 
   def multipart_post(path, body, header={})

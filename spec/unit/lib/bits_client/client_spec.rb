@@ -258,12 +258,39 @@ describe BitsClient do
         expect(response).to be_a(Net::HTTPOK)
       end
 
-      it 'raises an error when the response is not 204' do
+      it 'raises an error when the response is not 20X' do
         stub_request(:get, "http://bits-service.com/packages/#{guid}").
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
           subject.download_package(guid)
+        }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
+      end
+    end
+
+    describe '#duplicate_package' do
+      it 'makes the correct request to the bits endpoint' do
+        request = stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
+          to_return(status: 201)
+
+        subject.duplicate_package(guid)
+        expect(request).to have_been_requested
+      end
+
+      it 'returns the request response' do
+        stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
+          to_return(status: 201)
+
+        response = subject.duplicate_package(guid)
+        expect(response).to be_a(Net::HTTPCreated)
+      end
+
+      it 'raises an error when the response is not 201' do
+        stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
+          to_return(status: 400, body: '{"description":"bits-failure"}')
+
+        expect {
+          subject.duplicate_package(guid)
         }.to raise_error(BitsClient::Errors::Error, 'bits-failure')
       end
     end
