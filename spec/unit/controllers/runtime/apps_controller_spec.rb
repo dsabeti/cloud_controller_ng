@@ -996,6 +996,7 @@ module VCAP::CloudController
         let(:url) { 'http://example.com/somewhere/else' }
 
         before do
+          TestConfig.override(nginx: { use_nginx: false })
           app_obj.droplet_hash = guid
           app_obj.save
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:use_bits_service).and_return(true)
@@ -1007,6 +1008,18 @@ module VCAP::CloudController
           get "/v2/apps/#{app_obj.guid}/droplet/download", '', json_headers(admin_headers)
           expect(last_response).to be_redirect
           expect(last_response.header['Location']).to eq(url)
+        end
+
+        context 'when using nginx' do
+          before do
+            TestConfig.override(nginx: { use_nginx: true })
+          end
+
+          it 'uses nginx to redirect internally' do
+            get "/v2/apps/#{app_obj.guid}/droplet/download", '', json_headers(admin_headers)
+            expect(last_response.status).to eq(200)
+            expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{url}")
+          end
         end
 
         context 'when app does not exist' do

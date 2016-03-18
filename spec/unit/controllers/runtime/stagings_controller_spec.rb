@@ -11,6 +11,7 @@ module VCAP::CloudController
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
     let(:digester) { Digester.new(algorithm: Digest::MD5, type: :base64digest) }
+    let(:use_nginx) { true }
 
     let(:buildpack_cache_blobstore) do
       CloudController::DependencyLocator.instance.buildpack_cache_blobstore
@@ -27,7 +28,7 @@ module VCAP::CloudController
                   password: staging_password
               }
           },
-          nginx: { use_nginx: true },
+          nginx: { use_nginx: use_nginx },
           resource_pool: {
               resource_directory_key: 'cc-resources',
               fog_connection: {
@@ -530,6 +531,7 @@ module VCAP::CloudController
         let(:bits_client) { double(BitsClient) }
         let(:guid) { 'some-guid' }
         let(:url) { 'http://example.com/somewhere/else' }
+        let(:use_nginx) { false }
 
         before do
           app_obj.droplet_hash = guid
@@ -543,6 +545,16 @@ module VCAP::CloudController
           get "/staging/droplets/#{app_obj.guid}/download"
           expect(last_response).to be_redirect
           expect(last_response.header['Location']).to eq(url)
+        end
+
+        context 'when using nginx' do
+          let(:use_nginx) { true }
+
+          it 'uses nginx to redirect internally' do
+            get "/v2/apps/#{app_obj.guid}/droplet/download", '', json_headers(admin_headers)
+            expect(last_response.status).to eq(200)
+            expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{url}")
+          end
         end
 
         context 'when app does not exist' do

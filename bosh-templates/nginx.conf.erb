@@ -141,6 +141,16 @@ http {
       proxy_pass http://unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
     }
 
+    # Redirect with headers to bits-service
+    location ~* ^/bits_redirect/(.*) {
+        internal;
+
+        proxy_pass_header HTTP_X_VCAP_REQUEST_ID;
+        add_header HTTP_X_VCAP_REQUEST_ID $HTTP_X_VCAP_REQUEST_ID;
+
+        proxy_pass $1;
+    }
+
     location ~ ^/internal_redirect/(.*){
       # only allow internal redirects
       internal;

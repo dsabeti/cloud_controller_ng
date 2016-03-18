@@ -275,8 +275,11 @@ module VCAP::CloudController
         end
 
         context 'when bits_service flag is enabled' do
+          let(:redirect_url) { 'http://bits-service.example.com/buildpacks/1234' }
+          let(:use_nginx) { false }
           let(:bits_service_config) do
             {
+              nginx: { use_nginx: use_nginx },
               bits_service: {
                 enabled: true,
                 endpoint: 'https://bits-service.example.com'
@@ -298,13 +301,11 @@ module VCAP::CloudController
             allow_any_instance_of(BitsClient).to receive(:upload_buildpack).
               and_return(double(:response, code: '201', body: { guid: test_buildpack.key }.to_json))
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }, admin_headers
+            allow_any_instance_of(BitsClient).to receive(:download_url).
+              and_return(redirect_url)
           end
 
           it 'still returns 302 on success' do
-            redirect_url = 'http://bits-service.example.com/buildpacks/1234'
-            allow_any_instance_of(BitsClient).to receive(:download_url).
-              and_return(redirect_url)
-
             get "/v2/buildpacks/#{test_buildpack.guid}/download"
             expect(last_response.status).to eq(302)
             expect(last_response.header['Location']).to eq(redirect_url)
@@ -321,6 +322,16 @@ module VCAP::CloudController
             it 'returns an error' do
               get "/v2/buildpacks/#{test_buildpack.guid}-1-1-1-1/download"
               expect(last_response.status).to eq(404)
+            end
+          end
+
+          context 'when using nginx' do
+            let(:use_nginx) { true }
+
+            it 'uses nginx to redirect internally' do
+              get "/v2/buildpacks/#{test_buildpack.guid}/download"
+              expect(last_response.status).to eq(200)
+              expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{redirect_url}")
             end
           end
         end
