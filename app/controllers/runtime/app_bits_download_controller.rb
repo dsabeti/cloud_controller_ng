@@ -14,6 +14,8 @@ module VCAP::CloudController
       if use_bits_service
         raise Errors::ApiError.new_from_details('AppPackageNotFound', guid) unless app.package_hash
         url = bits_client.download_url(:packages, app.package_hash)
+
+        return [200, { 'X-Accel-Redirect' => "/bits_redirect/#{url}" }, nil] if @config[:nginx][:use_nginx]
         return [HTTP::FOUND, { 'Location' => url }, nil]
       end
 

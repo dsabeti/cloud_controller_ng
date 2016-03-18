@@ -92,10 +92,23 @@ module VCAP::CloudController
         let(:app_model) { double(App, guid: app_guid, package_hash: package_hash) }
 
         before do
+          TestConfig.override(nginx: { use_nginx: false })
           allow_any_instance_of(Security::AccessContext).to receive(:cannot?).with(Symbol, app_model).and_return(false)
           allow(App).to receive(:find).with(guid: app_guid).and_return(app_model)
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
           allow(bits_client).to receive(:download_url).with(:packages, package_hash).and_return(url)
+        end
+
+        context 'when using nginx' do
+          before do
+            TestConfig.override(nginx: { use_nginx: true })
+          end
+
+          it 'uses nginx to redirect internally' do
+            get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+            expect(last_response.status).to eq(200)
+            expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{url}")
+          end
         end
 
         it 'redirects to the correct url' do

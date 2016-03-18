@@ -134,6 +134,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.droplet_hash
         url = @bits_client.download_url(:droplets, droplet.droplet_hash)
         raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless url
+        return [200, { 'X-Accel-Redirect' => "/bits_redirect/#{url}" }, nil] if @config[:nginx][:use_nginx]
         redirect url
       end
 

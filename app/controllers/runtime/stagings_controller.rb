@@ -83,6 +83,7 @@ module VCAP::CloudController
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && droplet.droplet_hash
         url = @bits_client.download_url(:droplets, droplet.droplet_hash)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
+        return [200, { 'X-Accel-Redirect' => "/bits_redirect/#{url}" }, nil] if @config[:nginx][:use_nginx]
         redirect url
       end
 
