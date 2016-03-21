@@ -73,47 +73,51 @@ module VCAP::CloudController
 
         context 'when bits service is enabled' do
           let(:bits_client) { double(BitsClient) }
-          let(:tempfile) { Tempfile.new('test') }
           let(:dest_package_guid) { 'some-guid' }
-          let(:download_response) { double(Net::HTTPOK, body: File.read(compressed_path)) }
-          let(:upload_response) { double(Net::HTTPCreated, body: { guid: dest_package_guid }.to_json) }
+          let(:duplicate_response) { double(Net::HTTPCreated, body: { guid: dest_package_guid }.to_json) }
 
           before do
-            allow(Tempfile).to receive(:new).and_return(tempfile)
             allow_any_instance_of(CloudController::DependencyLocator).to receive(:use_bits_service).and_return(true)
             allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
-            allow(bits_client).to receive(:download_package).and_return(download_response)
-            allow(bits_client).to receive(:upload_package).and_return(upload_response)
           end
 
-          it 'downloads the correct source package' do
-            expect(bits_client).to receive(:download_package).with(src_app.package_hash)
-            job.perform
+          context 'and duplicate succeeds' do
+            before do
+              allow(bits_client).to receive(:duplicate_package).and_return(duplicate_response)
+            end
+
+            it 'duplicates the package' do
+              expect(bits_client).to receive(:duplicate_package).with(src_app.package_hash).and_return(duplicate_response)
+              job.perform
+            end
+
+            it 'sets the package_hash on the destionation app' do
+              job.perform
+              expect(dest_app.package_hash).to eq(dest_package_guid)
+            end
+
+            it 'creates a copy_bits audit event for source app' do
+              job.perform
+              expect(app_event_repository).to have_received(:record_src_copy_bits).with(dest_app, src_app, user.guid, email)
+            end
+
+            it 'creates a copy_bits audit event for destination app' do
+              job.perform
+              expect(app_event_repository).to have_received(:record_dest_copy_bits).with(dest_app, src_app, user.guid, email)
+            end
           end
 
-          it 'writes the source package to a tempfile' do
-            job.perform
-            expect(File.read(tempfile.path)).to eq(File.read(compressed_path))
-          end
+          context 'and duplicate fails' do
+            let(:not_found_error) { BitsClient::Errors::Error.new('something') }
 
-          it 'uploads the correct destionation package' do
-            expect(bits_client).to receive(:upload_package).with(tempfile.path)
-            job.perform
-          end
+            before do
+              allow(bits_client).to receive(:duplicate_package).and_raise(not_found_error)
+            end
 
-          it 'sets the package_hash on the destionation app' do
-            job.perform
-            expect(dest_app.package_hash).to eq(dest_package_guid)
-          end
-
-          it 'creates a copy_bits audit event for source app' do
-            job.perform
-            expect(app_event_repository).to have_received(:record_src_copy_bits).with(dest_app, src_app, user.guid, email)
-          end
-
-          it 'creates a copy_bits audit event for destination app' do
-            job.perform
-            expect(app_event_repository).to have_received(:record_dest_copy_bits).with(dest_app, src_app, user.guid, email)
+            it 'raises error' do
+              expect(bits_client).to receive(:duplicate_package).with(src_app.package_hash)
+              expect { job.perform }.to raise_error(not_found_error)
+            end
           end
         end
       end

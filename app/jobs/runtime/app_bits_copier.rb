@@ -15,16 +15,8 @@ module VCAP::CloudController
           logger.info("Copying the app bits from app '#{@src_app.guid}' to app '#{@dest_app.guid}'")
 
           if CloudController::DependencyLocator.instance.use_bits_service
-            guid = @src_app.package_hash
-
-            download_response = bits_client.download_package(guid)
-
-            package_file = Tempfile.new('package').binmode
-            package_file.write(download_response.body)
-            package_file.close
-
-            upload_response = bits_client.upload_package(package_file.path).body
-            @dest_app.package_hash = JSON.parse(upload_response)['guid']
+            response = bits_client.duplicate_package(@src_app.package_hash).body
+            @dest_app.package_hash = JSON.parse(response)['guid']
           else
             package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
             package_blobstore.cp_file_between_keys(@src_app.guid, @dest_app.guid)
