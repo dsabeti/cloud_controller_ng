@@ -47,6 +47,8 @@ module VCAP::CloudController
     end
 
     def env_hash(app)
+      # FIXME: Fix environment variables
+
       vcap_application = {
         'VCAP_APPLICATION' => {
           limits: {

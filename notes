@@ -1,0 +1,18 @@
+- Rename philosopher class
+- Add tests for philosopher class
+
+- Figure out differences between V3 and V2 app environment hash
+  - for the v3 environment class, we use it to send task to diego
+    (VCAP::CloudController::Diego::V3::Environment)
+  - the main level environment class is used to stage and desire an app
+    (VCAP::CloudController::Diego::Environment)
+  - Refactor both classes to remove duplication of functionality
+  - Is there a way for task protocol to use the normal environment class and
+    then tuck on the remaining env vars that it requires? That allows us to
+    compose the hash rather than have an exclusive class.
+
+- Why does app presenter recreate the vcap_application hash?
+  - Because the v3 app model doesn't have that function.
+
+- Consolidate creation of application environment hash in a single place
+- Diego Environment Presenter
