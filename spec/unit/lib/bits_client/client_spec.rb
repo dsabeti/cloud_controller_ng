@@ -270,7 +270,8 @@ describe BitsClient do
 
     describe '#duplicate_package' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
+        request = stub_request(:post, 'http://bits-service.com/packages').
+          with(body: JSON.generate('source_guid' => guid)).
           to_return(status: 201)
 
         subject.duplicate_package(guid)
@@ -278,15 +279,14 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
-          to_return(status: 201)
+        stub_request(:post, 'http://bits-service.com/packages').to_return(status: 201)
 
         response = subject.duplicate_package(guid)
         expect(response).to be_a(Net::HTTPCreated)
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:put, "http://bits-service.com/packages/#{guid}/duplicate").
+        stub_request(:post, 'http://bits-service.com/packages').
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {

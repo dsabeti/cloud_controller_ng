@@ -59,7 +59,7 @@ class BitsClient
   end
 
   def duplicate_package(guid)
-    put("/packages/#{guid}/duplicate").tap do |response|
+    post('/packages', JSON.generate(source_guid: guid)).tap do |response|
       validate_response_code!(201, response)
     end
   end
