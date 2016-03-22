@@ -38,6 +38,7 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
 
+    # FIXME: Environment variables
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)

@@ -14,6 +14,7 @@ module VCAP::CloudController
           end
 
           def stage_package_request(package, config, staging_details)
+            # FIXME: Fix environment variables
             env = VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables)
             logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 

@@ -353,6 +353,7 @@ module VCAP::CloudController
     end
     alias_method_chain :docker_credentials_json, 'serialization'
 
+    # FIXME: Environment variables
     def vcap_application
       app_name = app.nil? ? name : app.name
       {

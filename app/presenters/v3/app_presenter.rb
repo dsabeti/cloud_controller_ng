@@ -1,5 +1,6 @@
 require 'presenters/v3/pagination_presenter'
 
+# FIXME: Environment variables
 module VCAP::CloudController
   class AppPresenter
     def initialize(pagination_presenter=PaginationPresenter.new)

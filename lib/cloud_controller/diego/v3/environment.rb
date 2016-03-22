@@ -25,6 +25,7 @@ module VCAP::CloudController
 
         private
 
+        # FIXME: Environment variables
         def vcap_application
           version = SecureRandom.uuid
           uris = @app.routes.map(&:fqdn)

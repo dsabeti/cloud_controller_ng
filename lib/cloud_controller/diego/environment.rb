@@ -19,6 +19,7 @@ module VCAP::CloudController
 
         diego_env = diego_env.merge(DATABASE_URL: app.database_uri) if app.database_uri
 
+        # FIXME: Environment variables
         NormalEnvHashToDiegoEnvArrayPhilosopher.muse(diego_env)
       end
 

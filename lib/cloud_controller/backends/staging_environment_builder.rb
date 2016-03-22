@@ -19,6 +19,7 @@ module VCAP::CloudController
 
     private
 
+    # FIXME: Fix environment variables
     def vcap_application(app, space, memory_limit, disk_limit)
       version = SecureRandom.uuid
       uris    = app.routes.map(&:fqdn)
