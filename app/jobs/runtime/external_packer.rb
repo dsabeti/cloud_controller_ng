@@ -22,7 +22,7 @@ module VCAP::CloudController
             return
           end
 
-          bits_client           = CloudController::DependencyLocator.instance.bits_client
+          bits_client = CloudController::DependencyLocator.instance.bits_client
 
           if uploaded_compressed_path.to_s != ''
             entries_response = bits_client.upload_entries(uploaded_compressed_path)

@@ -18,8 +18,8 @@ describe BitsClient do
       expect(VCAP::Request).to receive(:current_id).and_return('0815')
 
       request = stub_request(:post, 'http://bits-service.com/buildpacks').
-        with(body: /.*buildpack".*/, headers: { 'X-Vcap-Request_Id' => '0815' }).
-        to_return(status: 201)
+                with(body: /.*buildpack".*/, headers: { 'X-Vcap-Request_Id' => '0815' }).
+                to_return(status: 201)
 
       subject.upload_buildpack(file_path, file_name)
       expect(request).to have_been_requested
@@ -33,8 +33,8 @@ describe BitsClient do
 
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:post, 'http://bits-service.com/buildpacks').
-          with(body: /.*buildpack".*/).
-          to_return(status: 201)
+                  with(body: /.*buildpack".*/).
+                  to_return(status: 201)
 
         subject.upload_buildpack(file_path, file_name)
         expect(request).to have_been_requested
@@ -76,7 +76,7 @@ describe BitsClient do
     describe '#delete_buildpack' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
-          to_return(status: 204)
+                  to_return(status: 204)
 
         subject.delete_buildpack(guid)
         expect(request).to have_been_requested
@@ -107,8 +107,8 @@ describe BitsClient do
 
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:post, 'http://bits-service.com/droplets').
-          with(body: /.*droplet".*/).
-          to_return(status: 201)
+                  with(body: /.*droplet".*/).
+                  to_return(status: 201)
 
         subject.upload_droplet(file_path)
         expect(request).to have_been_requested
@@ -143,7 +143,7 @@ describe BitsClient do
     describe '#delete_droplet' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
-          to_return(status: 204)
+                  to_return(status: 204)
 
         subject.delete_droplet(guid)
         expect(request).to have_been_requested
@@ -181,8 +181,8 @@ describe BitsClient do
 
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:post, 'http://bits-service.com/packages').
-          with(body: /.*package".*/).
-          to_return(status: 201)
+                  with(body: /.*package".*/).
+                  to_return(status: 201)
 
         subject.upload_package(file_path)
         expect(request).to have_been_requested
@@ -217,7 +217,7 @@ describe BitsClient do
     describe '#delete_package' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:delete, "http://bits-service.com/packages/#{guid}").
-          to_return(status: 204)
+                  to_return(status: 204)
 
         subject.delete_package(guid)
         expect(request).to have_been_requested
@@ -244,7 +244,7 @@ describe BitsClient do
     describe '#download_package' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:get, "http://bits-service.com/packages/#{guid}").
-          to_return(status: 200)
+                  to_return(status: 200)
 
         subject.download_package(guid)
         expect(request).to have_been_requested
@@ -271,8 +271,8 @@ describe BitsClient do
     describe '#duplicate_package' do
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:post, 'http://bits-service.com/packages').
-          with(body: JSON.generate('source_guid' => guid)).
-          to_return(status: 201)
+                  with(body: JSON.generate('source_guid' => guid)).
+                  to_return(status: 201)
 
         subject.duplicate_package(guid)
         expect(request).to have_been_requested
@@ -311,8 +311,8 @@ describe BitsClient do
 
       it 'makes the correct request to the bits endpoint' do
         request = stub_request(:post, 'http://bits-service.com/app_stash/matches').
-          with(body: resources.to_json).
-          to_return(status: 200, body: [].to_json)
+                  with(body: resources.to_json).
+                  to_return(status: 200, body: [].to_json)
 
         subject.matches(resources.to_json)
         expect(request).to have_been_requested
@@ -342,8 +342,8 @@ describe BitsClient do
 
       it 'posts a zip file with new bits' do
         request = stub_request(:post, 'http://bits-service.com/app_stash/entries').
-          with(body: /.*application".*/).
-          to_return(status: 201)
+                  with(body: /.*application".*/).
+                  to_return(status: 201)
 
         subject.upload_entries(zip)
         expect(request).to have_been_requested
@@ -377,8 +377,8 @@ describe BitsClient do
 
       it 'makes the correct request to the bits service' do
         request = stub_request(:post, 'http://bits-service.com/app_stash/bundles').
-          with(body: order.to_json).
-          to_return(status: 200, body: content_bits)
+                  with(body: order.to_json).
+                  to_return(status: 200, body: content_bits)
 
         subject.bundles(order.to_json)
         expect(request).to have_been_requested
