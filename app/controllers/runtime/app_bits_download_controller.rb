@@ -40,7 +40,7 @@ module VCAP::CloudController
     def blob_dispatcher
       BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
     end
-    
+
     def bits_client
       @bits_client ||= CloudController::DependencyLocator.instance.bits_client
     end

@@ -164,7 +164,7 @@ describe CloudController::DependencyLocator do
         }
 
         expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
-            with(hash_including(connection_options),
+          with(hash_including(connection_options),
               kind_of(CloudController::Blobstore::Client),
               kind_of(CloudController::Blobstore::Client),
               kind_of(CloudController::Blobstore::Client),

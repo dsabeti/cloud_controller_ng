@@ -79,8 +79,6 @@ module CloudController
         @logger ||= Steno.logger('cc.blobstore.internal_url_generator')
       end
 
-      private
-
       def bits_client
         @bits_client ||= CloudController::DependencyLocator.instance.bits_client
       end

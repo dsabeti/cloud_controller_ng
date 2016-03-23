@@ -57,11 +57,11 @@ module VCAP::CloudController
       update(cached_docker_image: image)
     end
 
-    private
-
     def self.use_bits_service
       CloudController::DependencyLocator.instance.use_bits_service
     end
+
+    private
 
     def blobstore
       CloudController::DependencyLocator.instance.droplet_blobstore

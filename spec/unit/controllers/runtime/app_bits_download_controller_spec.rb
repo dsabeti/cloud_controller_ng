@@ -44,13 +44,14 @@ module VCAP::CloudController
         let(:bits_client) { double(BitsClient) }
         let(:url) { 'package-download-url' }
         let(:package_hash) { 'package-guid' }
-        let(:app_guid) { 'app-guid' }
-        let(:app_model) { double(App, guid: app_guid, package_hash: package_hash) }
+        let(:app_guid) { app_obj.guid }
+        let(:app_model) { double(App, guid: app_guid, package_hash: package_hash, space: app_obj.space) }
 
         before do
           TestConfig.override(nginx: { use_nginx: false })
           allow_any_instance_of(Security::AccessContext).to receive(:cannot?).with(Symbol, app_model).and_return(false)
-          allow(App).to receive(:find).with(guid: app_guid).and_return(app_model)
+          allow(App).to receive(:find).with(id: app_obj.id).and_return(app_model)
+          allow(App).to receive(:find).with(guid: app_obj.guid).and_return(app_model)
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
           allow(bits_client).to receive(:download_url).with(:packages, package_hash).and_return(url)
         end
