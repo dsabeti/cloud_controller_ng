@@ -2,8 +2,6 @@ ENV['RACK_ENV'] = 'test'
 require 'rack/test'
 require 'spec_helper'
 
-# require 'rails_helper'
-
 describe 'Packages' do
   include Rack::Test::Methods
   include ControllerHelpers
