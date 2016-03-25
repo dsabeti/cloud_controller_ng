@@ -6,6 +6,13 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    def initialize(params={})
+      super(params)
+      @requested_keys << :health_check_type if params[:health_check] && params[:health_check].key?('type')
+      @requested_keys << :health_check_timeout if params[:health_check] && params[:health_check]['data'] && params[:health_check]['data'].key?('timeout')
+      p
+    end
+
     def self.health_check_requested?
       @health_check_requested ||= proc { |a| a.requested?(:health_check) }
     end
