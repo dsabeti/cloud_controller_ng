@@ -1,17 +1,6 @@
-ENV['RACK_ENV'] = 'test'
-require 'rack/test'
 require 'spec_helper'
 
 describe 'Packages' do
-  include Rack::Test::Methods
-  include ControllerHelpers
-
-  def app
-    test_config     = TestConfig.config
-    request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new
-    VCAP::CloudController::RackAppBuilder.new.build test_config, request_metrics
-  end
-
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
@@ -27,7 +16,7 @@ describe 'Packages' do
     end
 
     let(:type) { 'docker' }
-    let(:data) do # 'docker://cloudfoundry/runtime-ci'
+    let(:data) do
       {
         image: 'registry/image:latest'
       }
