@@ -20,6 +20,7 @@ includes:
   - droplets/create
   - droplets/lifecycle_object
   - droplets/get
+  - droplets/delete
   - droplets/list
   - packages/header
   - packages/object
