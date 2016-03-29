@@ -954,24 +954,32 @@ module VCAP::CloudController
           process = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
           app_model.add_process(process)
           expected_hash = {
-            limits: {
-              mem: 259,
-              disk: 799,
-              fds: 1234,
+            'limits'=> {
+              'mem'=> 259,
+              'disk'=> 799,
+              'fds'=> 1234,
             },
-            application_id: process.guid,
-            application_version: process.version,
-            application_name: app_model.name,
-            application_uris: process.uris,
-            version: process.version,
-            name: process.name,
-            space_name: process.space.name,
-            space_id: process.space.guid,
-            uris: process.uris,
-            users: nil
+            'application_id'=> process.guid,
+            'application_version'=> process.version,
+            'application_name'=> app_model.name,
+            'application_uris'=> process.uris,
+            'version'=> process.version,
+            'name'=> process.name,
+            'space_name'=> process.space.name,
+            'space_id'=> process.space.guid,
+            'uris'=> process.uris,
+            'users'=> nil
           }
 
-          expect(process.vcap_application).to eq(expected_hash)
+          vars_builder = VCAP::VarsBuilder.new(
+            process,
+            v3_app_name: app_model.name
+          )
+          vcap_application = vars_builder.vcap_application
+          expect(vcap_application).to eq(expected_hash)
+
+#move this test to controller, amke sure func is called WITH 'v3_process_name
+          # expect(process.vcap_application).to eq(expected_hash)
         end
       end
 
@@ -979,24 +987,28 @@ module VCAP::CloudController
         it 'has the expected values' do
           app = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'app-name')
           expected_hash = {
-            limits: {
-              mem: 259,
-              disk: 799,
-              fds: 1234,
+            'limits'=> {
+              'mem'=> 259,
+              'disk'=> 799,
+              'fds'=> 1234,
             },
-            application_id: app.guid,
-            application_version: app.version,
-            application_name: 'app-name',
-            application_uris: app.uris,
-            version: app.version,
-            name: 'app-name',
-            space_name: app.space.name,
-            space_id: app.space.guid,
-            uris: app.uris,
-            users: nil
+            'application_id'=> app.guid,
+            'application_version'=> app.version,
+            'application_name'=> 'app-name',
+            'application_uris'=> app.uris,
+            'version'=> app.version,
+            'name'=> 'app-name',
+            'space_name'=> app.space.name,
+            'space_id'=> app.space.guid,
+            'uris'=> app.uris,
+            'users'=> nil
           }
 
-          expect(app.vcap_application).to eq(expected_hash)
+          vars_builder = VCAP::VarsBuilder.new(app)
+          vcap_application = vars_builder.vcap_application
+          expect(vcap_application).to eq(expected_hash)
+#move this test to controller, amke sure func is called without 'v3_process_name
+          # expect(app.vcap_application).to eq(expected_hash)
         end
       end
     end

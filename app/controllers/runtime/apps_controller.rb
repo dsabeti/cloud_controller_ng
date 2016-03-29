@@ -41,6 +41,18 @@ module VCAP::CloudController
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)
+
+      # if app.app_guid.nil?
+      #   vars_builder = VCAP::VarsBuilder.new(app)
+      # else
+      #   vars_builder = VCAP::VarsBuilder.new(
+      #     app,
+      #     v3_app_name: app.app.name
+      #   )
+      # end
+      vars_builder = VCAP::VarsBuilder.new(app)
+      vcap_application = vars_builder.vcap_application
+
       FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
       [
         HTTP::OK,
@@ -50,7 +62,7 @@ module VCAP::CloudController
           running_env_json:     EnvironmentVariableGroup.running.environment_json,
           environment_json:     app.environment_json,
           system_env_json:      SystemEnvPresenter.new(app.all_service_bindings).system_env,
-          application_env_json: { 'VCAP_APPLICATION' => app.vcap_application },
+          application_env_json: { 'VCAP_APPLICATION' => vcap_application },
         }, pretty: true)
       ]
     end
