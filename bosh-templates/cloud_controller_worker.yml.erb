@@ -28,8 +28,21 @@ newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
 development_mode: <%= p("cc.development_mode") %>
 
 message_bus_servers:
-<% p("nats.machines").each do |address| %>
-  - nats://<%= p("nats.user") %>:<%= p("nats.password") %>@<%= address %>:<%= p("nats.port") %>
+<%
+  nats_config = nil
+  if_link("nats") do |nats|
+    nats_config = {}
+    nats_config["machines"] = nats.p("nats.machines")
+    nats_config["user"] = nats.p("nats.user")
+    nats_config["password"] = nats.p("nats.password")
+    nats_config["port"] = nats.p("nats.port")
+  end
+
+  nats_config = p("nats") unless nats_config
+%>
+
+<% nats_config["machines"].each do |address| %>
+  - nats://<%= nats_config["user"] %>:<%= nats_config["password"] %>@<%= address %>:<%= nats_config["port"] %>
 <% end %>
 
 external_protocol: <%= p("cc.external_protocol") %>
