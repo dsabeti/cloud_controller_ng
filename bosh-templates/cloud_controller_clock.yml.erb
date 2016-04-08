@@ -158,7 +158,7 @@ loggregator:
     ccdb_config = {}
     ccdb_config["db_scheme"] = ccdb.p("databases.db_scheme")
     ccdb_config["port"] = ccdb.p("databases.port")
-    ccdb_config["address"] = ccdb.p("databases.address")
+    ccdb_config["address"] = ccdb.instances.first.address
     ccdb_config["max_connections"] = ccdb.p("databases.max_connections")
     ccdb_config["roles"] = ccdb.p("databases.roles")
     ccdb_config["databases"] = ccdb.p("databases.databases")
